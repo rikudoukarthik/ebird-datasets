@@ -1,9 +1,5 @@
 require(lubridate)
 require(tidyverse)
-library(dtplyr)
-library(data.table)
-
-rawpath <- "ebd_IN_relAug-2021.txt"
 
 preimp <- c("CATEGORY","COMMON.NAME","OBSERVATION.COUNT",
             "LOCALITY.ID","LOCALITY.TYPE","REVIEWED","APPROVED","STATE","COUNTY","LAST.EDITED.DATE",
@@ -12,42 +8,44 @@ preimp <- c("CATEGORY","COMMON.NAME","OBSERVATION.COUNT",
             "NUMBER.OBSERVERS","ALL.SPECIES.REPORTED","GROUP.IDENTIFIER","SAMPLING.EVENT.IDENTIFIER",
             "TRIP.COMMENTS")
 
-nms <- gsub(" ",".",
-            names(fread(rawpath, nrows = 1, sep = "\t", header = T, quote = "", stringsAsFactors = F,
-                        na.strings = c(""," ", NA))) 
-)
+
+rawpath <- "ebd_IN_relAug-2021.txt"
+nms <- names(read.delim(rawpath, nrows = 1, sep = "\t", header = T, quote = "", stringsAsFactors = F,
+                        na.strings = c(""," ", NA)))
 nms[!(nms %in% preimp)] <- "NULL"
 nms[nms %in% preimp] <- NA
+# 5 mins
+data <- read.delim(rawpath, colClasses = nms, sep = "\t", header = T, quote = "",
+                      stringsAsFactors = F, na.strings = c(""," ",NA))
 
 
-# took 13 min
-data_DT <- fread(rawpath, colClasses = nms, sep = "\t", header = T, quote = "",
-                 stringsAsFactors = F, na.strings = c(""," ",NA))
-names(data_DT) <- gsub(" ",".",names(data_DT))
-gc()
-memory.limit(size = 20000)
+### sensitive species
+senspath <- "ebd_sensitive_relMay-2021_IN.txt"
+nms1 <- names(read.delim(senspath, nrows = 1, sep = "\t", header = T, quote = "", 
+                         stringsAsFactors = F, na.strings = c(""," ", NA)))
+nms1[!(nms1 %in% preimp)] <- "NULL"
+nms1[nms1 %in% preimp] <- NA
+senssp <- read.delim(senspath, colClasses = nms1, sep = "\t", header = T, quote = "",
+                     stringsAsFactors = F, na.strings = c(""," ",NA))
 
 
-# creating a dtplyr (aka lazy data.table) object on which tidy operations can be done
-# but does not take up additional memory; retains speed and efficiency of data.table
-data <- lazy_dt(data_DT)
-data <- data %>% mutate(GROUP.ID = ifelse(is.na(GROUP.IDENTIFIER),SAMPLING.EVENT.IDENTIFIER, 
-                                          GROUP.IDENTIFIER)) %>%
+data <- rbind(data, senssp)
+
+
+### adding useful columns (4 mins)
+data <- data %>% 
+  mutate(GROUP.ID = ifelse(is.na(GROUP.IDENTIFIER),SAMPLING.EVENT.IDENTIFIER, 
+                           GROUP.IDENTIFIER)) %>%
   mutate(OBSERVATION.DATE = as.Date(OBSERVATION.DATE),
          YEAR = year(OBSERVATION.DATE),
          MONTH = month(OBSERVATION.DATE),
-         DAYM = day(OBSERVATION.DATE))
-gc()
+         DAYM = day(OBSERVATION.DATE),
+         DAYY = yday(OBSERVATION.DATE))
 
-rm(list=setdiff(ls(envir = .GlobalEnv), c("data","data_DT")), pos = ".GlobalEnv")
-save.image("ebd_IN_relAug-2021.RData") 
-
-gc()
+rm(list=setdiff(ls(envir = .GlobalEnv), c("data")), pos = ".GlobalEnv")
+save.image("ebd_IN_relAug-2021.RData") # 4.5 mins
 
 
-## Month of August for monthly challenge ####
-
+### Month of August for monthly challenge
 data <- data %>% filter(YEAR == 2021 & MONTH == 8)
-data <- collect(data)
-rm("data_DT")
 save.image("ebd_IN_relAug-2021_AUG.RData")
