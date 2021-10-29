@@ -47,7 +47,7 @@ data1 <- data0 %>%
            grepl("ollect",FULL.NAME)
   )
 
-write.csv(data1, "ebd_users_GA_relSep-2021.csv")
+write.csv(data1, "group-accounts/ebd_users_GA_relSep-2021.csv")
 
 
 # will modify the .csv by adding columns for GA.1 and GA.2 and assigning the values with 
