@@ -56,9 +56,11 @@ data <- data %>%
          WEEKSY = if_else(WEEKY > 21, WEEKY-21, 52-(21-WEEKY)))
 
 rm(list=setdiff(ls(envir = .GlobalEnv), c("data")), pos = ".GlobalEnv")
+rm(.Random.seed)
 save.image("EBD/ebd_IN_relOct-2021.RData") # 7 mins
 
 
 ### Month of September for monthly challenge
 data <- data %>% filter(YEAR == 2021 & MONTH == 10)
 save.image("EBD/ebd_IN_relOct-2021_OCT.RData")
+
