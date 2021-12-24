@@ -60,7 +60,21 @@ rm(.Random.seed)
 save.image("EBD/ebd_IN_relNov-2021.RData") 
 
 
+
+### filtering for PMP 
+data_pmp <- data %>% group_by(GROUP.ID) %>%
+  filter(any(OBSERVER.ID == "obsr2607928")) # PMP account ID
+
+save(data_pmp, file = "EBD/pmp_relNov-2021.RData")
+
+rm(list = setdiff(ls(envir = .GlobalEnv), c("data")), pos = ".GlobalEnv")
+
+
+
 ### Month of November for monthly challenge
 data <- data %>% filter(YEAR == 2021 & MONTH == 11)
+
+rm(.Random.seed)
 save.image("EBD/ebd_IN_relNov-2021_NOV.RData")
+
 
