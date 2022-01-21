@@ -19,7 +19,7 @@ data <- read.delim(rawpath, colClasses = nms, sep = "\t", header = T, quote = ""
 
 
 ### sensitive species
-senspath <- "EBD/ebd_sensitive_relMay-2021_IN.txt"
+senspath <- "EBD/ebd_sensitive_relDec-2021_IN.txt"
 nms1 <- names(read.delim(senspath, nrows = 1, sep = "\t", header = T, quote = "", 
                          stringsAsFactors = F, na.strings = c(""," ", NA)))
 nms1[!(nms1 %in% preimp)] <- "NULL"
