@@ -1,0 +1,85 @@
+---
+title: "eBird/ML audio uploaders in India"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include=FALSE}
+
+library(tidyverse)
+library(lubridate)
+library(magrittr)
+library(patchwork)
+theme_set(theme_bw())
+
+
+media_csv_names <- list.files(pattern = "*.csv",
+                              full.names = T)
+
+eBird.users <- read.delim("ebd_users_relDec-2021.txt", 
+                          sep = "\t", header = T, quote = "", 
+                          stringsAsFactors = F, na.strings = c(""," ",NA))
+names(eBird.users) <- c("OBSERVER.ID","FIRST.NAME","LAST.NAME")
+eBird.users <- eBird.users %>% transmute(OBSERVER.ID = OBSERVER.ID,
+                                         FULL.NAME = paste(FIRST.NAME, LAST.NAME))
+
+data0 <- media_csv_names %>% 
+  lapply(read_csv) %>% 
+  bind_rows() %>% 
+  rename(SAMPLING.EVENT.IDENTIFIER = `eBird Checklist ID`,
+         FULL.NAME = Recordist) %>%
+  rename_with(~ toupper(.)) %>% 
+  rename_with(~ gsub(" ", ".", .x)) %>% 
+  left_join(eBird.users)
+
+data1 <- data0 %>% 
+  group_by(FULL.NAME) %>% 
+  summarise(TOT.AUDIO = n(),
+            SP.AUDIO = n_distinct(COMMON.NAME)) %>% 
+  arrange(desc(TOT.AUDIO), desc(SP.AUDIO))
+
+data2 <- data1 %>% 
+  filter(TOT.AUDIO >= 500, SP.AUDIO >= 200)
+
+data3 <- data1 %>% 
+  filter(TOT.AUDIO >= 200, SP.AUDIO >= 100)
+
+```
+
+# Recordist histogram
+
+How recordists are distributed across numbers of total audio and species audio files uploaded:
+
+(Y axis has been cut off to highlight our interest; blue is lenient, red is stringent)
+
+```{r, echo=FALSE}
+
+(ggplot(data1) +
+   geom_histogram(aes(TOT.AUDIO), binwidth = 100) +
+   coord_cartesian(ylim = c(0,25)) +
+   geom_vline(xintercept = 200, col = "skyblue") +
+   geom_vline(xintercept = 500, col = "darkred")) /
+  (ggplot(data1) +
+     geom_histogram(aes(SP.AUDIO), binwidth = 10) +
+     coord_cartesian(ylim = c(0,25)) +
+     geom_vline(xintercept = 100, col = "skyblue") +
+     geom_vline(xintercept = 200, col = "darkred"))
+
+```
+
+# Candidates
+
+On filtering using the two basic thresholds discussed, the following lists of candidates were obtained.
+
+**500 total, 200 species:** `r n_distinct(data2$FULL.NAME)` candidates
+
+```{r, echo=FALSE}
+knitr::kable(data2)
+```
+
+**200 total, 100 species:** `r n_distinct(data3$FULL.NAME)` candidates
+
+```{r, echo=FALSE}
+knitr::kable(data3)
+```
