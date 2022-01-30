@@ -10,7 +10,7 @@ data0 <- data %>%
   filter(STATE == "Karnataka",
          COUNTY == "Bangalore") %>% 
   select(-c(LAST.EDITED.DATE, HAS.MEDIA)) %>% 
-  mutate(CATEGORY == case_when(CATEGORY == "domestic" & 
+  mutate(CATEGORY = case_when(CATEGORY == "domestic" & 
                                  COMMON.NAME == "Rock Pigeon" ~ "species",
                                TRUE ~ CATEGORY)) %>% 
   filter(CATEGORY %in% c("issf","species"))
