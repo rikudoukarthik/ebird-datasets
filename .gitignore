@@ -9,7 +9,8 @@
 *.csv
 *.txt
 *.zip
-
+*.xlsx
 *.pdf
+*.docx
 
 
