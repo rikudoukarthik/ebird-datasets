@@ -27,20 +27,39 @@ temp <- data0 %>%
   count(STATE) %>% 
   arrange(desc(n)) %>% 
   slice(1) %>% 
-  transmute(FULL.NAME = FULL.NAME,
-            ACTIVE.STATE = STATE)
+  select(FULL.NAME, STATE)
 
 data1 <- data0 %>% 
-  group_by(FULL.NAME) %>% 
+  right_join(temp) %>% 
+  group_by(FULL.NAME, STATE) %>% 
+  # counts for each observer's active state only
   summarise(TOT.AUDIO = n(), # each row in the data is one recording
             SP.AUDIO = n_distinct(COMMON.NAME)) %>% 
-  left_join(temp) %>% 
-  arrange(ACTIVE.STATE, desc(TOT.AUDIO), desc(SP.AUDIO))
+  ungroup() %>% 
+  arrange(STATE, desc(TOT.AUDIO), desc(SP.AUDIO)) %>% 
+  # setting 50 species and 100 recordings as threshold
+  filter(TOT.AUDIO >= 100, SP.AUDIO >= 50) %>% 
+  # removing certain people
+  filter(!(
+    FULL.NAME %in% c("Josep del Hoyo", "Peter Boesman", "Andrew Spencer",
+                     "Anonymous", 
+                     "Ashwin Viswanathan", "Mittal Gala", "Subhadra Devi", "Praveen J", "Karthik Thrikkadeeri", "swaroop patankar", "Suhel Quader", # BCI
+                     "Puja Sharma", "Ramit Singal", "Esha Munshi")))
 
-# setting 150 species and 400 recordings as threshold
+# top 2 by total uploads
 data2 <- data1 %>% 
-  filter(TOT.AUDIO >= 400, SP.AUDIO >= 150)
+  group_by(STATE) %>% 
+  arrange(desc(TOT.AUDIO)) %>% 
+  slice(1:2)
 
-write_csv(data2, "sound-id-vol/sound-id-vol_candidate-list.csv")
+# top 2 by total species
+data3 <- data1 %>% 
+  group_by(STATE) %>% 
+  arrange(desc(SP.AUDIO)) %>% 
+  slice(1:2)
 
+# joining to get top 4 (if above the threshold) for every state
+data4 <- full_join(data2, data3) %>% 
+  arrange(STATE, desc(TOT.AUDIO), desc(SP.AUDIO))
 
+write_csv(data4, "sound-id-vol/sound-id-vol_candidate-list.csv")
