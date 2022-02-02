@@ -19,7 +19,8 @@ data0 <- media_csv_names %>%
          FULL.NAME = Recordist) %>%
   rename_with(~ toupper(.)) %>% 
   rename_with(~ gsub(" ", ".", .x)) %>% 
-  left_join(eBird.users)
+  left_join(eBird.users) %>% 
+  filter(TAXON.CATEGORY %in% c("Species", "Form"))
 
 # getting most active state (audio-wise) for each observer
 temp <- data0 %>% 
@@ -27,18 +28,23 @@ temp <- data0 %>%
   count(STATE) %>% 
   arrange(desc(n)) %>% 
   slice(1) %>% 
-  select(FULL.NAME, STATE)
+  rename(ACTIVE.STATE = STATE) %>% 
+  select(FULL.NAME, ACTIVE.STATE)
 
 data1 <- data0 %>% 
-  right_join(temp) %>% 
   group_by(FULL.NAME, STATE) %>% 
-  # counts for each observer's active state only
-  summarise(TOT.AUDIO = n(), # each row in the data is one recording
-            SP.AUDIO = n_distinct(COMMON.NAME)) %>% 
-  ungroup() %>% 
-  arrange(STATE, desc(TOT.AUDIO), desc(SP.AUDIO)) %>% 
-  # setting 50 species and 100 recordings as threshold
-  filter(TOT.AUDIO >= 100, SP.AUDIO >= 50) %>% 
+  summarise(STATE.TOTAL = n(),
+            STATE.SP = n_distinct(COMMON.NAME)) %>% 
+  summarise(STATE = STATE,
+            STATE.TOTAL = STATE.TOTAL,
+            STATE.SP = STATE.SP,
+            NATION.TOTAL = sum(STATE.TOTAL),
+            NATION.SP = sum(STATE.SP)) %>% 
+  left_join(temp) %>% 
+  arrange(FULL.NAME, desc(NATION.TOTAL), desc(NATION.SP)) %>% 
+  # setting 100 recordings and 50 species as threshold
+  filter(STATE.SP >= 30,
+         NATION.TOTAL >= 100, NATION.SP >= 50) %>% 
   # removing certain people
   filter(!(
     FULL.NAME %in% c("Josep del Hoyo", "Peter Boesman", "Andrew Spencer",
@@ -49,17 +55,17 @@ data1 <- data0 %>%
 # top 2 by total uploads
 data2 <- data1 %>% 
   group_by(STATE) %>% 
-  arrange(desc(TOT.AUDIO)) %>% 
+  arrange(desc(NATION.TOTAL)) %>% 
   slice(1:2)
 
 # top 2 by total species
 data3 <- data1 %>% 
   group_by(STATE) %>% 
-  arrange(desc(SP.AUDIO)) %>% 
+  arrange(desc(NATION.SP)) %>% 
   slice(1:2)
 
 # joining to get top 4 (if above the threshold) for every state
 data4 <- full_join(data2, data3) %>% 
-  arrange(STATE, desc(TOT.AUDIO), desc(SP.AUDIO))
+  arrange(STATE, desc(NATION.TOTAL), desc(NATION.SP))
 
 write_csv(data4, "sound-id-vol/sound-id-vol_candidate-list.csv")
