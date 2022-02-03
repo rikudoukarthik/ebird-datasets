@@ -51,13 +51,13 @@ data1 <- data0 %>%
                      "Ashwin Viswanathan", "Mittal Gala", "Subhadra Devi", "Praveen J", "Karthik Thrikkadeeri", "swaroop patankar", "Suhel Quader", # BCI
                      "Puja Sharma", "Ramit Singal", "Esha Munshi")))
 
-# top 2 by total uploads
+# top 3 by total uploads
 data2 <- data1 %>% 
   group_by(STATE) %>% 
   arrange(desc(NATION.SP)) %>% 
   slice(1:3)
 
-# top 2 by total species
+# top 3 by total species
 data3 <- data1 %>% 
   group_by(STATE) %>% 
   anti_join(data2) %>% 
