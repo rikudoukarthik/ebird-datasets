@@ -28,8 +28,7 @@ temp <- data0 %>%
   count(STATE) %>% 
   arrange(desc(n)) %>% 
   slice(1) %>% 
-  rename(ACTIVE.STATE = STATE) %>% 
-  select(FULL.NAME, ACTIVE.STATE)
+  select(FULL.NAME, STATE)
 
 data1 <- data0 %>% 
   group_by(FULL.NAME, STATE) %>% 
@@ -40,14 +39,14 @@ data1 <- data0 %>%
             STATE.SP = STATE.SP,
             NATION.TOTAL = sum(STATE.TOTAL),
             NATION.SP = sum(STATE.SP)) %>% 
-  left_join(temp) %>% 
+  right_join(temp) %>% 
   arrange(FULL.NAME, desc(NATION.TOTAL), desc(NATION.SP)) %>% 
   # setting 100 recordings and 50 species as threshold
-  filter(STATE.SP >= 30,
+  filter(STATE.TOTAL >= 60, STATE.SP >= 30,
          NATION.TOTAL >= 100, NATION.SP >= 50) %>% 
   # removing certain people
   filter(!(
-    FULL.NAME %in% c("Josep del Hoyo", "Peter Boesman", "Andrew Spencer",
+    FULL.NAME %in% c("Josep del Hoyo", "Peter Boesman", "Andrew Spencer", "Ben F. King",
                      "Anonymous", 
                      "Ashwin Viswanathan", "Mittal Gala", "Subhadra Devi", "Praveen J", "Karthik Thrikkadeeri", "swaroop patankar", "Suhel Quader", # BCI
                      "Puja Sharma", "Ramit Singal", "Esha Munshi")))
@@ -55,17 +54,20 @@ data1 <- data0 %>%
 # top 2 by total uploads
 data2 <- data1 %>% 
   group_by(STATE) %>% 
-  arrange(desc(NATION.TOTAL)) %>% 
-  slice(1:2)
+  arrange(desc(NATION.SP)) %>% 
+  slice(1:3)
 
 # top 2 by total species
 data3 <- data1 %>% 
   group_by(STATE) %>% 
-  arrange(desc(NATION.SP)) %>% 
-  slice(1:2)
+  anti_join(data2) %>% 
+  arrange(desc(NATION.TOTAL)) %>% 
+  slice(1:3)
 
 # joining to get top 4 (if above the threshold) for every state
 data4 <- full_join(data2, data3) %>% 
-  arrange(STATE, desc(NATION.TOTAL), desc(NATION.SP))
+  arrange(STATE, desc(NATION.SP), desc(NATION.TOTAL)) %>% 
+  group_by(STATE) %>% 
+  slice(1:4)
 
 write_csv(data4, "sound-id-vol/sound-id-vol_candidate-list.csv")
