@@ -24,14 +24,14 @@ data0 <- media_csv_names %>%
 
 # getting most active state (audio-wise) for each observer
 temp <- data0 %>% 
-  group_by(FULL.NAME) %>% 
+  group_by(OBSERVER.ID, FULL.NAME) %>% 
   count(STATE) %>% 
   arrange(desc(n)) %>% 
   slice(1) %>% 
-  select(FULL.NAME, STATE)
+  select(OBSERVER.ID, FULL.NAME, STATE)
 
 data1 <- data0 %>% 
-  group_by(FULL.NAME, STATE) %>% 
+  group_by(OBSERVER.ID, FULL.NAME, STATE) %>% 
   summarise(STATE.TOTAL = n(),
             STATE.SP = n_distinct(COMMON.NAME)) %>% 
   summarise(STATE = STATE,
@@ -39,6 +39,7 @@ data1 <- data0 %>%
             STATE.SP = STATE.SP,
             NATION.TOTAL = sum(STATE.TOTAL),
             NATION.SP = sum(STATE.SP)) %>% 
+  ungroup() %>% 
   right_join(temp) %>% 
   arrange(FULL.NAME, desc(NATION.TOTAL), desc(NATION.SP)) %>% 
   # setting 100 recordings and 50 species as threshold
