@@ -9,8 +9,16 @@
 *.csv
 *.txt
 *.zip
-*.xlsx
 *.pdf
 *.docx
+
+gitpat
+
+Pradyumna/eBird R file.R
+group-accounts/bin
+group-accounts/ebd_users_GA_master_relAug-2021.xlsx
+group-accounts/ebd_users_GA_master_relAug-2021_AV.xlsx
+group-accounts/ebd_users_GA_master_relAug-2021_AV_KT.xlsx
+
 
 
