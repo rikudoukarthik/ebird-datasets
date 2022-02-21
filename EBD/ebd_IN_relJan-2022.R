@@ -31,7 +31,7 @@ senssp <- read.delim(senspath, colClasses = nms1, sep = "\t", header = T, quote 
 gc()
 data <- bind_rows(data, senssp) 
 
-
+rm(list = setdiff(ls(), "data"))
 
 met_week <- function(dates) {
   require(lubridate)
@@ -41,7 +41,7 @@ met_week <- function(dates) {
   return(ifelse(leap_year(dates), leap_year[year_day], normal_year[year_day])) 
 }
 
-
+gc()
 
 ### adding useful columns 
 data <- data %>% 
@@ -56,7 +56,7 @@ data <- data %>%
 # M.YEAR = if_else(DAY.Y <= 151, YEAR-1, YEAR), # from 1st June to 31st May
 # WEEK.MY = if_else(WEEK.Y > 21, WEEK.Y-21, 52-(21-WEEK.Y)))
 
-rm(list = setdiff(ls(envir = .GlobalEnv), c("data")), pos = ".GlobalEnv")
+rm(list = setdiff(ls(), "data"))
 rm(.Random.seed)
 save.image("EBD/ebd_IN_relJan-2022.RData") 
 
