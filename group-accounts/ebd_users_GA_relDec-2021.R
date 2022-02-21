@@ -3,7 +3,7 @@ library(lubridate)
 
 
 # ensure .RData is in the directory
-load("EBD/ebd_IN_relJan-2022.RData") # 4-5 minutes
+load("EBD/ebd_IN_relJan-2022.RData") # 5-6 minutes
 data <- data %>% distinct(OBSERVER.ID)
 
 eBird_users <- read.delim("EBD/ebd_users_relDec-2021.txt", sep = "\t", header = T, 
@@ -23,7 +23,7 @@ keywords <- c("Group","group","Survey","survey","Atlas","atlas","rganization",
               "etwork","Team","team","estival","Fest","fest","esearch","ecord",
               "roject","iodivers","ational","eserve","rotect","Lodge","lodge","esort",
               "anctuary","ildlife","epartment","Dept","dept","onservation","Trust",
-              "trust","ollect")
+              "trust","ollect","Monitor","monitor")
 
 accounts <- c("GBCN Goa") # other group accounts without keywords in name
 
@@ -39,9 +39,8 @@ prev_GAlist <- read_csv("group-accounts/ebd_users_GA_relSep-2021.csv",
 
 
 data2 <- data1 %>% 
-  # KalaiSelvan V changed his name. In Sep list name had keyword. Maybe should use
-  # left_join instead of full_join
-  full_join(prev_GAlist) %>% 
+  # KalaiSelvan V changed his name. In Sep list name had keyword. 
+  left_join(prev_GAlist) %>% 
   left_join(eBird_users) %>% 
   arrange(GA.1)
 
